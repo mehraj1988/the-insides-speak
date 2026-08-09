@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------
+   THE INSIDES SPEAK — design tokens
+   "The Pulse Beneath the Headlines"
+
+   Ink & paper for the newsroom feel, one live "pulse" red used sparingly
+   for anything urgent or interactive, plus a muted section palette so
+   Beyond Borders / Health / Echoline / Sports read apart at a glance.
+   ------------------------------------------------------------------- */
+:root {
+  --paper: #f8f6f1;
+  --paper-dim: #efebe2;
+  --ink: #14161c;
+  --ink-soft: #4b4f5a;
+  --line: #e4ddcd;
+
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+
+  --pulse: #cf2b3a;
+  --pulse-ink: #7a1420;
+
+  --section-borders: #3b6ea5;
+  --section-health: #2f8f6e;
+  --section-echoline: #b8872f;
+  --section-sports: #cf2b3a;
+}
+
+:root[data-theme="dark"] {
+  --paper: #0c0d11;
+  --paper-dim: #131419;
+  --ink: #f3f1ea;
+  --ink-soft: #a6a9b4;
+  --line: #262832;
+
+  --surface: #15161c;
+  --surface-raised: #1a1c23;
+
+  --pulse: #ff4d5e;
+  --pulse-ink: #ffb3ba;
+
+  --section-borders: #7fb0e8;
+  --section-health: #5fd0a3;
+  --section-echoline: #e0b158;
+  --section-sports: #ff4d5e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0c0d11;
+    --paper-dim: #131419;
+    --ink: #f3f1ea;
+    --ink-soft: #a6a9b4;
+    --line: #262832;
+
+    --surface: #15161c;
+    --surface-raised: #1a1c23;
+
+    --pulse: #ff4d5e;
+    --pulse-ink: #ffb3ba;
+
+    --section-borders: #7fb0e8;
+    --section-health: #5fd0a3;
+    --section-echoline: #e0b158;
+    --section-sports: #ff4d5e;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-dim: var(--paper-dim);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-pulse: var(--pulse);
+  --color-pulse-ink: var(--pulse-ink);
+  --color-section-borders: var(--section-borders);
+  --color-section-health: var(--section-health);
+  --color-section-echoline: var(--section-echoline);
+  --color-section-sports: var(--section-sports);
+
+  --font-heading: var(--font-trirong);
+  --font-body: var(--font-rubik);
+}
+
+* {
+  border-color: var(--line);
+}
+
+html {
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.font-heading {
+  font-family: var(--font-heading), Georgia, serif;
+}
+
+::selection {
+  background: var(--pulse);
+  color: #fff;
+}
+
+/* Reveal-on-scroll utility — progressively enhanced, content is fully
+   visible without JS so nothing is ever hidden from crawlers or users
+   with scripting disabled. */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pulse-dot {
+  position: relative;
+  display: inline-flex;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--pulse);
+}
+
+.pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--pulse);
+  animation: pulse-ring 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot::after {
+    animation: none;
+  }
+}
+
+.text-balance {
+  text-wrap: balance;
+}
