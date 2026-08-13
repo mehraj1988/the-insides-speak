@@ -14,7 +14,7 @@ import { CategoryBadge } from "@/components/category-badge";
 import { ArticleCard } from "@/components/article-card";
 import { SectionHeading } from "@/components/section-heading";
 import { site } from "@/content/site";
-import { formatDate } from "@/lib/utils";
+import { formatDate, withBasePath } from "@/lib/utils";
 
 export function generateStaticParams() {
   return articles.map((article) => ({ slug: article.slug }));
@@ -72,7 +72,7 @@ export default async function ArticlePage(props: PageProps<"/articles/[slug]">) 
           <figure className="mt-8">
             {/* eslint-disable-next-line @next/next/no-img-element -- static export, source image is pre-sized on disk */}
             <img
-              src={article.heroImage}
+              src={withBasePath(article.heroImage)}
               alt=""
               className="aspect-[16/9] w-full rounded-lg object-cover"
             />

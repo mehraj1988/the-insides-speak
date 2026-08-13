@@ -3,8 +3,7 @@ import type { Article } from "@/content/articles";
 import { estimateReadingMinutes } from "@/content/articles";
 import { ArticleCover } from "@/components/article-cover";
 import { CategoryBadge } from "@/components/category-badge";
-import { formatDateShort } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { cn, formatDateShort, withBasePath } from "@/lib/utils";
 
 export function ArticleCard({
   article,
@@ -30,7 +29,7 @@ export function ArticleCard({
       <Link href={`/articles/${article.slug}/`} className="block overflow-hidden">
         {article.heroImage ? (
           // eslint-disable-next-line @next/next/no-img-element -- static export, source images are pre-sized on disk
-          <img src={article.heroImage} alt="" className={coverClass} />
+          <img src={withBasePath(article.heroImage)} alt="" className={coverClass} />
         ) : (
           <ArticleCover slug={article.slug} category={article.category} className={coverClass} />
         )}

@@ -1,7 +1,7 @@
 import type { WireDigest } from "@/content/wire-digests";
 import { CategoryBadge } from "@/components/category-badge";
 import { ArticleCover } from "@/components/article-cover";
-import { formatDateShort, cn } from "@/lib/utils";
+import { formatDateShort, cn, withBasePath } from "@/lib/utils";
 
 /**
  * Citation-style card for curated wire coverage. Unlike ArticleCard this
@@ -21,7 +21,7 @@ export function DigestCard({ digest, className }: { digest: WireDigest; classNam
       <div className="relative overflow-hidden">
         {digest.image ? (
           // eslint-disable-next-line @next/next/no-img-element -- static export, source images are pre-sized on disk
-          <img src={digest.image} alt="" className="aspect-[16/10] w-full object-cover" />
+          <img src={withBasePath(digest.image)} alt="" className="aspect-[16/10] w-full object-cover" />
         ) : (
           <ArticleCover slug={digest.id} category={digest.category} className="aspect-[16/10] w-full" />
         )}

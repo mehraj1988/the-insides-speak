@@ -1,5 +1,5 @@
 import type { Edition } from "@/content/editions";
-import { formatDate } from "@/lib/utils";
+import { formatDate, withBasePath } from "@/lib/utils";
 
 export function EditionCard({ edition, isLatest }: { edition: Edition; isLatest?: boolean }) {
   return (
@@ -12,7 +12,7 @@ export function EditionCard({ edition, isLatest }: { edition: Edition; isLatest?
       <div className="relative flex aspect-[3/4] items-center justify-center overflow-hidden bg-paper-dim">
         {edition.image ? (
           // eslint-disable-next-line @next/next/no-img-element -- static export, source image is pre-sized on disk
-          <img src={edition.image} alt="" className="h-full w-full object-cover" />
+          <img src={withBasePath(edition.image)} alt="" className="h-full w-full object-cover" />
         ) : (
           <div className="flex flex-col items-center gap-2 text-ink-soft">
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
