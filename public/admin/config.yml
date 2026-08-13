@@ -1,0 +1,169 @@
+# Decap CMS configuration for The Insides Speak.
+#
+# This admin UI lives at /admin/ and edits the Markdown files under
+# content/ directly via the GitHub API — the same files
+# src/content/articles-data.ts, wire-digests.ts, and editions.ts read at
+# build time. No database, no server for the site itself.
+#
+# ⚠️ SETUP REQUIRED before this works: `base_url` below is a placeholder.
+# See docs/cms-setup.md for the one-time setup (a free GitHub OAuth App
+# + a free Cloudflare Worker) — it only needs to happen once. Once it's
+# done, editors publish articles by following docs/how-to-publish.md.
+
+backend:
+  name: github
+  repo: mehraj1988/the-insides-speak
+  branch: main
+  base_url: https://REPLACE-WITH-YOUR-WORKER-URL.workers.dev
+
+# Every save opens a pull request instead of publishing straight to
+# main — a second editor (or the same one, later) can review the diff
+# on GitHub before merging it live. Merge the PR (or use the "Publish"
+# button in the CMS) when it's ready to go out.
+publish_mode: editorial_workflow
+
+media_folder: "public/images/misc"
+public_folder: "/images/misc"
+
+collections:
+  - name: articles
+    label: "Articles (The Thinking Pulse)"
+    description: "Full, original pieces — get their own page at /articles/<slug>/."
+    folder: "content/articles"
+    create: true
+    slug: "{{slug}}"
+    summary: "{{title}} — {{date}}"
+    sortable_fields: ["date", "title", "category"]
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Excerpt (shown on cards)", name: "excerpt", widget: "text" }
+      - label: "Section"
+        name: "category"
+        widget: "select"
+        options:
+          - { label: "Echoline (editorial/analysis)", value: "echoline" }
+          - { label: "Beyond Borders", value: "beyond-borders" }
+          - { label: "Health", value: "health" }
+          - { label: "Sports", value: "sports" }
+        default: "echoline"
+      - label: "Date"
+        name: "date"
+        widget: "datetime"
+        format: "YYYY-MM-DD"
+        date_format: true
+        time_format: false
+        picker_utc: true
+      - { label: "Author / byline", name: "author", widget: "string", default: "The Insides Speak Editorial Desk" }
+      - label: "Tags"
+        name: "tags"
+        widget: "list"
+        required: false
+        default: []
+      - { label: "Featured on homepage", name: "featured", widget: "boolean", default: false }
+      - label: "Hero image"
+        name: "heroImage"
+        widget: "image"
+        required: false
+        media_folder: "/public/images/articles"
+        public_folder: "/images/articles"
+      - { label: "Image credit", name: "imageCredit", widget: "string", required: false, hint: "e.g. \"Photo by Jane Doe on Pexels\"" }
+      - label: "Body"
+        name: "body"
+        widget: "list"
+        typeKey: "type"
+        types:
+          - label: "Paragraph"
+            name: "p"
+            widget: "object"
+            summary: "{{fields.text}}"
+            fields:
+              - { label: "Text", name: "text", widget: "text" }
+          - label: "Subheading"
+            name: "h"
+            widget: "object"
+            summary: "{{fields.text}}"
+            fields:
+              - { label: "Heading text", name: "text", widget: "string" }
+          - label: "Bulleted list"
+            name: "ul"
+            widget: "object"
+            summary: "{{fields.items}}"
+            fields:
+              - label: "Items"
+                name: "items"
+                widget: "list"
+                field: { label: "Item", name: "item", widget: "string" }
+          - label: "Numbered list"
+            name: "ol"
+            widget: "object"
+            summary: "{{fields.items}}"
+            fields:
+              - label: "Items"
+                name: "items"
+                widget: "list"
+                field: { label: "Item", name: "item", widget: "string" }
+          - label: "Pulled-out stat / quote box"
+            name: "callout"
+            widget: "object"
+            summary: "{{fields.text}}"
+            fields:
+              - { label: "Text", name: "text", widget: "text" }
+
+  - name: wire_digests
+    label: "Wire Digest Cards"
+    description: "Citation cards for Beyond Borders / Health / Sports coverage from other outlets — headline, source, date, photo. No full article body; these never had one."
+    folder: "content/wire-digests"
+    create: true
+    slug: "{{slug}}"
+    summary: "{{title}} — cited via {{source}}"
+    sortable_fields: ["date", "title", "category", "source"]
+    fields:
+      - { label: "Headline", name: "title", widget: "string" }
+      - { label: "Dek (one or two sentences)", name: "dek", widget: "text" }
+      - { label: "Source (e.g. ProPublica)", name: "source", widget: "string" }
+      - label: "Date"
+        name: "date"
+        widget: "datetime"
+        format: "YYYY-MM-DD"
+        date_format: true
+        time_format: false
+        picker_utc: true
+      - label: "Section"
+        name: "category"
+        widget: "select"
+        options:
+          - { label: "Beyond Borders", value: "beyond-borders" }
+          - { label: "Health", value: "health" }
+          - { label: "Sports", value: "sports" }
+      - label: "Photo"
+        name: "image"
+        widget: "image"
+        required: false
+        media_folder: "/public/images/digests"
+        public_folder: "/images/digests"
+      - { label: "Image credit", name: "imageCredit", widget: "string", required: false }
+
+  - name: editions
+    label: "E-Paper Editions"
+    description: "PDF editions shown on /gallery/."
+    folder: "content/editions"
+    create: true
+    slug: "{{slug}}"
+    summary: "{{label}}"
+    fields:
+      - { label: "Label (e.g. \"June - August 2026\")", name: "label", widget: "string" }
+      - label: "Date"
+        name: "date"
+        widget: "datetime"
+        format: "YYYY-MM-DD"
+        date_format: true
+        time_format: false
+        picker_utc: true
+        hint: "Newest date wins the \"Latest\" badge — doesn't need to be exact."
+      - { label: "PDF link (Google Drive, etc.)", name: "href", widget: "string" }
+      - label: "Cover image"
+        name: "image"
+        widget: "image"
+        required: false
+        media_folder: "/public/images/editions"
+        public_folder: "/images/editions"

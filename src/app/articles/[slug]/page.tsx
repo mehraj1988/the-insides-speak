@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  articles,
-  estimateReadingMinutes,
-  getArticleBySlug,
-  getRelatedArticles,
-  type ArticleBodyBlock,
-} from "@/content/articles";
+import { estimateReadingMinutes, type ArticleBodyBlock } from "@/content/articles";
+import { articles, getArticleBySlug, getRelatedArticles } from "@/content/articles-data";
 import { categories } from "@/content/categories";
 import { ArticleCover } from "@/components/article-cover";
 import { CategoryBadge } from "@/components/category-badge";

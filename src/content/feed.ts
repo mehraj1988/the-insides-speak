@@ -1,4 +1,5 @@
-import { sortedArticles } from "./articles";
+import "server-only";
+import { sortedArticles } from "./articles-data";
 import { sortedDigests } from "./wire-digests";
 import type { ExplorerItem } from "@/components/articles-explorer";
 

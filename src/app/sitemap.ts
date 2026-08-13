@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { articles } from "@/content/articles";
+import { articles } from "@/content/articles-data";
 import { site } from "@/content/site";
 
 // Required for `output: "export"` — this route has no per-request data.

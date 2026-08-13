@@ -23,63 +23,76 @@ npm run lint    # eslint
 ## Project structure
 
 ```
+content/               ← Edit these to update articles/digests/editions
+  articles/<slug>.md     One file per original, fully-authored piece
+  wire-digests/<id>.md   One file per curated Beyond Borders/Health/Sports card
+  editions/<slug>.md     One file per E-Paper edition
+public/
+  admin/                Decap CMS — the browser-based editing UI, at /admin/
+  images/{articles,digests,editions}/   Real photos, committed to the repo
+docs/
+  cms-setup.md          One-time engineering setup for /admin/ (do this first)
+  how-to-publish.md     Day-to-day guide for the two editors, no code involved
 src/
   app/                 Routes (App Router). One folder per page.
   components/          Reusable UI (cards, header, forms, etc.)
-  content/             ← Edit these files to update site content
-    articles.ts         Original, fully-authored pieces (The Thinking Pulse / Echoline)
-    wire-digests.ts      Curated Beyond Borders / Health / Sports citation cards
-    editions.ts          E-Paper editions
-    team.ts               The Team bios
-    site.ts                Nav links, tagline, email, social links
-    categories.ts          Section names & accent colors
+  content/             Types + build-time loaders that read content/*.md
+    articles.ts          Article/ArticleBodyBlock types + pure helpers (client-safe)
+    articles-data.ts      Reads content/articles/*.md — server-only
+    wire-digests.ts        Reads content/wire-digests/*.md — server-only
+    editions.ts             Reads content/editions/*.md — server-only
+    team.ts, site.ts, categories.ts   Small, rarely-changed config
   lib/utils.ts         Small helpers (date formatting, etc.)
 ```
 
-There's no CMS and no database on purpose — the whole site is data-driven from the plain TypeScript files in `src/content/`. Editing content means editing those arrays; the homepage, listing pages, filters, and individual article pages all update automatically. No new component code is needed to add an article, a team member, or an E-Paper edition.
+### How content actually gets added
 
-### Adding an article
+**The two editors use `/admin/`** — a form-based editor (Decap CMS) at `https://mehraj1988.github.io/the-insides-speak/admin/` that logs in with GitHub and commits directly to `content/*.md`, no TypeScript or git required. See **[docs/cms-setup.md](docs/cms-setup.md)** for the (one-time, ~10 minute) setup this needs, and **[docs/how-to-publish.md](docs/how-to-publish.md)** for the editor-facing guide.
 
-Open `src/content/articles.ts` and append an object to the `articles` array. `body` is a list of typed blocks so real formatting (subheadings, stat call-outs, lists) survives, not just flat paragraphs:
+**Editing a `content/*.md` file directly** (through GitHub's own web UI, or locally) also works and needs no new tooling — it's the same files the CMS writes, useful as a fallback if `/admin/` is ever unreachable. Each file's frontmatter mirrors the `Article`/`WireDigest`/`Edition` TypeScript types in `src/content/`; `body` is a list of typed blocks (`p`, `h`, `ul`/`ol`, `callout`) rather than one prose blob, so real formatting survives:
 
-```ts
-{
-  slug: "a-unique-url-friendly-slug",
-  title: "Headline",
-  excerpt: "One or two sentences shown on cards.",
-  category: "echoline", // "beyond-borders" | "health" | "echoline" | "sports"
-  date: "2026-08-15",
-  author: "Byline",
-  tags: [],
-  featured: false, // true pins it to the homepage "Featured" row
-  heroImage: "/images/articles/your-slug.jpg", // or null to fall back to generated cover art
-  imageCredit: "Photo by X on Pexels", // or null
-  body: [
-    { type: "p", text: "Opening paragraph." },
-    { type: "h", text: "A subheading" },
-    { type: "p", text: "More prose." },
-    { type: "ul", items: ["Bullet one", "Bullet two"] },
-    { type: "callout", text: "A pulled-out stat or quote box." },
-  ],
-}
+```yaml
+---
+title: Headline
+excerpt: One or two sentences shown on cards.
+category: echoline # beyond-borders | health | echoline | sports
+date: '2026-08-15'
+author: Byline
+tags: []
+featured: false # true pins it to the homepage "Featured" row
+heroImage: /images/articles/a-unique-url-friendly-slug.jpg # or omit
+imageCredit: Photo by X on Pexels # or omit
+body:
+  - type: p
+    text: Opening paragraph.
+  - type: h
+    text: A subheading
+  - type: ul
+    items: [Bullet one, Bullet two]
+  - type: callout
+    text: A pulled-out stat or quote box.
+---
 ```
 
-The article gets its own page at `/articles/<slug>/`, and shows up in `/articles/`, the relevant section page, and the homepage automatically.
+The filename (minus `.md`) is the slug — `content/articles/a-unique-url-friendly-slug.md` becomes `/articles/a-unique-url-friendly-slug/`. A malformed or missing required field fails the build loudly (naming the exact file) rather than shipping a broken page — see `src/content/load-markdown.ts`.
+
+Either way, the article/digest/edition then shows up in the relevant listing, filters, and the homepage automatically — no component code changes needed.
 
 ### Adding curated wire coverage
 
-Beyond Borders, Health, and most of Sports are citation cards, not full articles — that mirrors the source site, where those sections link out to partner reporting (ProPublica, KFF Health News, Mississippi Today, etc.) rather than hosting it. Add these to `src/content/wire-digests.ts` instead of `articles.ts`; see `DigestCard` for how they render (headline, dek, "Cited via [source]", no fabricated internal link).
+Beyond Borders, Health, and most of Sports are citation cards, not full articles — that mirrors the source site, where those sections link out to partner reporting (ProPublica, KFF Health News, Mississippi Today, etc.) rather than hosting it. Add these under `content/wire-digests/` instead of `content/articles/`; see `DigestCard` for how they render (headline, dek, "Cited via [source]", no fabricated internal link).
 
 ### About images
 
-Real hero/cover photos live in `public/images/{articles,digests,editions}/`. If an article or digest has no `image`/`heroImage` set, it falls back to generated abstract cover art (an SVG "pulse" pattern tinted to the section's color) from `src/components/article-cover.tsx` — useful for drafts before real art is ready.
+Real hero/cover photos live in `public/images/{articles,digests,editions}/` and are uploaded straight from `/admin/`, or added by hand for direct file edits. If an article or digest has no `image`/`heroImage` set, it falls back to generated abstract cover art (an SVG "pulse" pattern tinted to the section's color) from `src/components/article-cover.tsx` — useful for drafts before real art is ready. All image `<img>` tags go through `withBasePath()` in `src/lib/utils.ts` — do **not** hardcode `/images/...` in a component; use that helper, or a bare `/images/...` string in content frontmatter (the loader/render layer handles the prefix).
 
-### Editing sections, team, editions, nav
+### Editing team, site config, nav
 
-- **E-Paper editions:** `src/content/editions.ts` — add the newest edition to the top of the array with a link to the hosted PDF and a cover image.
 - **Team bios:** `src/content/team.ts`.
 - **Site name, tagline, email, nav links:** `src/content/site.ts`.
 - **Section colors/descriptions:** `src/content/categories.ts`.
+
+These three are small and rarely change, so they were left as plain TypeScript rather than moved into the CMS.
 
 ### The "Write To Us" form
 
@@ -109,8 +122,8 @@ When the design is approved:
 
 Content is mirrored from the live theinsidesspeak.com as of this writing:
 
-- **The 12 Echoline pieces** in `articles.ts` are reproduced in full (headings, stat call-outs, prose) with their real hero photos, downloaded into `public/images/articles/`.
-- **Beyond Borders, Health, and most of Sports** were never full articles on the source site — clicking one there just opened the credited stock photo, with no real outbound link. `wire-digests.ts` reproduces them honestly as citation cards (headline, dek, source, date) rather than inventing a detail page or a link that didn't exist.
+- **The 12 Echoline pieces** in `content/articles/` are reproduced in full (headings, stat call-outs, prose) with their real hero photos, downloaded into `public/images/articles/`.
+- **Beyond Borders, Health, and most of Sports** were never full articles on the source site — clicking one there just opened the credited stock photo, with no real outbound link. `content/wire-digests/` reproduces them honestly as citation cards (headline, dek, source, date) rather than inventing a detail page or a link that didn't exist.
 - **A cleanup was made**: several articles' reference lists included "citations" that were actually disguised Google search-query links standing in for sources that don't appear to exist (a classic AI-generation artifact). Only links literally pointing at `google.com/search` were stripped; every other link and all prose was left untouched. Worth a look before this goes to production — `git log` / re-run the extraction if you want the raw version.
 - **E-Paper** now points at the two real editions and their real cover art from `/gallery/`.
 

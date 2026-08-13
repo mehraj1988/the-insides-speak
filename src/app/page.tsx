@@ -7,7 +7,7 @@ import { DigestCard } from "@/components/digest-card";
 import { EditionCard } from "@/components/edition-card";
 import { CtaBand } from "@/components/cta-band";
 import { Reveal } from "@/components/reveal";
-import { getFeaturedArticles, sortedArticles, getArticlesByCategory } from "@/content/articles";
+import { getFeaturedArticles, sortedArticles, getArticlesByCategory } from "@/content/articles-data";
 import { getDigestsByCategory } from "@/content/wire-digests";
 import { allFeedItems, type ExplorerItem } from "@/content/feed";
 import { teamStat } from "@/content/team";
