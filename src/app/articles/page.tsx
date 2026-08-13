@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/page-header";
 import { ArticlesExplorer } from "@/components/articles-explorer";
-import { sortedArticles } from "@/content/articles";
+import { allFeedItems } from "@/content/feed";
 
 export const metadata: Metadata = {
   title: "The Thinking Pulse",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default function ArticlesPage() {
-  const allArticles = sortedArticles();
+  const items = allFeedItems();
 
   return (
     <>
@@ -22,7 +22,7 @@ export default function ArticlesPage() {
       />
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         <Suspense fallback={null}>
-          <ArticlesExplorer articles={allArticles} />
+          <ArticlesExplorer items={items} />
         </Suspense>
       </section>
     </>

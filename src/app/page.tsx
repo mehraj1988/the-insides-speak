@@ -3,14 +3,13 @@ import { Hero } from "@/components/hero";
 import { StatStrip } from "@/components/stat-strip";
 import { SectionHeading } from "@/components/section-heading";
 import { ArticleCard } from "@/components/article-card";
+import { DigestCard } from "@/components/digest-card";
 import { EditionCard } from "@/components/edition-card";
 import { CtaBand } from "@/components/cta-band";
 import { Reveal } from "@/components/reveal";
-import {
-  getArticlesByCategory,
-  getFeaturedArticles,
-  sortedArticles,
-} from "@/content/articles";
+import { getFeaturedArticles, sortedArticles, getArticlesByCategory } from "@/content/articles";
+import { getDigestsByCategory } from "@/content/wire-digests";
+import { allFeedItems, type ExplorerItem } from "@/content/feed";
 import { teamStat } from "@/content/team";
 import { latestEdition } from "@/content/editions";
 import { formatDate } from "@/lib/utils";
@@ -18,10 +17,12 @@ import { formatDate } from "@/lib/utils";
 export default function Home() {
   const featured = getFeaturedArticles().slice(0, 3);
   const latest = sortedArticles().slice(0, 3);
-  const borders = getArticlesByCategory("beyond-borders").slice(0, 3);
-  const health = getArticlesByCategory("health").slice(0, 3);
+  const borders = getDigestsByCategory("beyond-borders").slice(0, 3);
+  const health = getDigestsByCategory("health").slice(0, 3);
   const echoline = getArticlesByCategory("echoline").slice(0, 3);
-  const sports = getArticlesByCategory("sports").slice(0, 3);
+  const sportsItems = allFeedItems()
+    .filter((item) => item.data.category === "sports")
+    .slice(0, 3);
   const edition = latestEdition();
 
   return (
@@ -37,8 +38,8 @@ export default function Home() {
               label: "dedicated desks — Beyond Borders, Health, Echoline, and Sports.",
             },
             {
-              value: "Monthly",
-              label: `E-Paper edition, latest issue ${formatDate(edition.date)}.`,
+              value: edition.label,
+              label: "current E-Paper edition, available as a downloadable PDF.",
             },
           ]}
         />
@@ -60,37 +61,37 @@ export default function Home() {
         </section>
       )}
 
-      <SectionRow
+      <DigestSectionRow
         eyebrow="Investigations & policy"
         title="Beyond Borders"
-        description="Reporting on the systems and decisions that shape lives far past any one headline."
+        description="Curated wire coverage on the systems and decisions that shape lives far past any one headline."
         href="/articles/?category=beyond-borders"
-        articles={borders}
+        digests={borders}
       />
 
-      <SectionRow
+      <DigestSectionRow
         eyebrow="Coverage"
         title="Health"
-        description="The policy, access, and technology stories behind public health."
+        description="Curated wire coverage on the policy, access, and technology stories behind public health."
         href="/articles/?category=health"
-        articles={health}
+        digests={health}
         tone="alt"
       />
 
       <SectionRow
         eyebrow="Analysis"
         title="Echoline"
-        description="Editorial takes on the economics and geopolitics shaping public life."
+        description="Original editorial takes on the economics and geopolitics shaping public life."
         href="/articles/?category=echoline"
         articles={echoline}
       />
 
-      <SectionRow
-        eyebrow="Original coverage"
+      <MixedSectionRow
+        eyebrow="Coverage"
         title="Sports"
         description="The games, institutions, and people that make up the sporting world."
         href="/sports/"
-        articles={sports}
+        items={sportsItems}
         tone="alt"
       />
 
@@ -104,8 +105,7 @@ export default function Home() {
               The full edition, laid out the way it was meant to be read.
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-soft">
-              Every issue of {edition.label} and the archive before it, as a downloadable
-              PDF.
+              The {edition.label} edition and the archive before it, as a downloadable PDF.
             </p>
             <Link
               href="/gallery/"
@@ -199,3 +199,70 @@ function SectionRow({
     </section>
   );
 }
+
+function DigestSectionRow({
+  eyebrow,
+  title,
+  description,
+  href,
+  digests,
+  tone = "default",
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  href: string;
+  digests: ReturnType<typeof getDigestsByCategory>;
+  tone?: "default" | "alt";
+}) {
+  if (digests.length === 0) return null;
+
+  return (
+    <section className={tone === "alt" ? "bg-paper-dim" : undefined}>
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+        <SectionHeading eyebrow={eyebrow} title={title} description={description} href={href} />
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {digests.map((digest) => (
+            <DigestCard key={digest.id} digest={digest} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MixedSectionRow({
+  eyebrow,
+  title,
+  description,
+  href,
+  items,
+  tone = "default",
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  href: string;
+  items: ExplorerItem[];
+  tone?: "default" | "alt";
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <section className={tone === "alt" ? "bg-paper-dim" : undefined}>
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+        <SectionHeading eyebrow={eyebrow} title={title} description={description} href={href} />
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) =>
+            item.kind === "article" ? (
+              <ArticleCard key={`a-${item.data.slug}`} article={item.data} />
+            ) : (
+              <DigestCard key={`d-${item.data.id}`} digest={item.data} />
+            ),
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+

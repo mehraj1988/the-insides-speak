@@ -3,17 +3,33 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { Article } from "@/content/articles";
+import type { WireDigest } from "@/content/wire-digests";
 import { categoryList, type CategorySlug } from "@/content/categories";
 import { ArticleCard } from "@/components/article-card";
+import { DigestCard } from "@/components/digest-card";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 6;
 
+export type ExplorerItem =
+  | { kind: "article"; data: Article }
+  | { kind: "digest"; data: WireDigest };
+
+function matchesQuery(item: ExplorerItem, q: string): boolean {
+  if (!q) return true;
+  const haystack =
+    item.kind === "article"
+      ? [item.data.title, item.data.excerpt, ...item.data.tags]
+      : [item.data.title, item.data.dek, item.data.source];
+  return haystack.some((s) => s.toLowerCase().includes(q));
+}
+
 export function ArticlesExplorer({
-  articles,
+  items,
   lockCategory,
 }: {
-  articles: Article[];
+  /** Pre-sorted (newest first) mix of real articles and wire-digest cards. */
+  items: ExplorerItem[];
   /** When set, the category tab bar is hidden and results are pinned to this section. */
   lockCategory?: CategorySlug;
 }) {
@@ -28,16 +44,11 @@ export function ArticlesExplorer({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return articles.filter((article) => {
-      const matchesCategory = category === "all" || article.category === category;
-      const matchesQuery =
-        !q ||
-        article.title.toLowerCase().includes(q) ||
-        article.excerpt.toLowerCase().includes(q) ||
-        article.tags.some((tag) => tag.toLowerCase().includes(q));
-      return matchesCategory && matchesQuery;
+    return items.filter((item) => {
+      const matchesCategory = category === "all" || item.data.category === category;
+      return matchesCategory && matchesQuery(item, q);
     });
-  }, [articles, category, query]);
+  }, [items, category, query]);
 
   const tabs = lockCategory
     ? []
@@ -86,14 +97,18 @@ export function ArticlesExplorer({
 
       {filtered.length === 0 ? (
         <p className="py-16 text-center text-sm text-ink-soft">
-          No articles match that search yet. Try a different term or section.
+          No stories match that search yet. Try a different term or section.
         </p>
       ) : (
         <>
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.slice(0, visible).map((article) => (
-              <ArticleCard key={article.slug} article={article} />
-            ))}
+            {filtered.slice(0, visible).map((item) =>
+              item.kind === "article" ? (
+                <ArticleCard key={`a-${item.data.slug}`} article={item.data} />
+              ) : (
+                <DigestCard key={`d-${item.data.id}`} digest={item.data} />
+              ),
+            )}
           </div>
 
           {visible < filtered.length && (

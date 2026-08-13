@@ -27,8 +27,9 @@ src/
   app/                 Routes (App Router). One folder per page.
   components/          Reusable UI (cards, header, forms, etc.)
   content/             ← Edit these files to update site content
-    articles.ts         The Thinking Pulse / Sports articles
-    editions.ts          E-Paper monthly editions
+    articles.ts         Original, fully-authored pieces (The Thinking Pulse / Echoline)
+    wire-digests.ts      Curated Beyond Borders / Health / Sports citation cards
+    editions.ts          E-Paper editions
     team.ts               The Team bios
     site.ts                Nav links, tagline, email, social links
     categories.ts          Section names & accent colors
@@ -39,31 +40,43 @@ There's no CMS and no database on purpose — the whole site is data-driven from
 
 ### Adding an article
 
-Open `src/content/articles.ts` and append an object to the `articles` array:
+Open `src/content/articles.ts` and append an object to the `articles` array. `body` is a list of typed blocks so real formatting (subheadings, stat call-outs, lists) survives, not just flat paragraphs:
 
 ```ts
 {
   slug: "a-unique-url-friendly-slug",
   title: "Headline",
   excerpt: "One or two sentences shown on cards.",
-  category: "beyond-borders", // "beyond-borders" | "health" | "echoline" | "sports"
+  category: "echoline", // "beyond-borders" | "health" | "echoline" | "sports"
   date: "2026-08-15",
   author: "Byline",
-  tags: ["tag-one", "tag-two"],
+  tags: [],
   featured: false, // true pins it to the homepage "Featured" row
-  body: ["Paragraph one.", "Paragraph two.", "..."],
+  heroImage: "/images/articles/your-slug.jpg", // or null to fall back to generated cover art
+  imageCredit: "Photo by X on Pexels", // or null
+  body: [
+    { type: "p", text: "Opening paragraph." },
+    { type: "h", text: "A subheading" },
+    { type: "p", text: "More prose." },
+    { type: "ul", items: ["Bullet one", "Bullet two"] },
+    { type: "callout", text: "A pulled-out stat or quote box." },
+  ],
 }
 ```
 
-The article gets its own page at `/articles/<slug>/`, shows up in `/articles/`, the relevant section page, the homepage, and generates its own cover art automatically (no image upload needed — see below).
+The article gets its own page at `/articles/<slug>/`, and shows up in `/articles/`, the relevant section page, and the homepage automatically.
 
-### About the cover art
+### Adding curated wire coverage
 
-Article cards use generated abstract cover art (an SVG "pulse" pattern tinted to the section's color) instead of stock photography. That's a deliberate choice for a starter build: it needs no image licensing, no uploads, and it makes the four sections instantly recognizable by color. Swap in real photography later by editing `src/components/article-cover.tsx` and `article-card.tsx`.
+Beyond Borders, Health, and most of Sports are citation cards, not full articles — that mirrors the source site, where those sections link out to partner reporting (ProPublica, KFF Health News, Mississippi Today, etc.) rather than hosting it. Add these to `src/content/wire-digests.ts` instead of `articles.ts`; see `DigestCard` for how they render (headline, dek, "Cited via [source]", no fabricated internal link).
+
+### About images
+
+Real hero/cover photos live in `public/images/{articles,digests,editions}/`. If an article or digest has no `image`/`heroImage` set, it falls back to generated abstract cover art (an SVG "pulse" pattern tinted to the section's color) from `src/components/article-cover.tsx` — useful for drafts before real art is ready.
 
 ### Editing sections, team, editions, nav
 
-- **E-Paper editions:** `src/content/editions.ts` — add the newest edition to the top of the array with a link to the hosted PDF.
+- **E-Paper editions:** `src/content/editions.ts` — add the newest edition to the top of the array with a link to the hosted PDF and a cover image.
 - **Team bios:** `src/content/team.ts`.
 - **Site name, tagline, email, nav links:** `src/content/site.ts`.
 - **Section colors/descriptions:** `src/content/categories.ts`.
@@ -94,4 +107,11 @@ When the design is approved:
 
 ## Notes on the current content
 
-Every article, bio, and edition link in this build is **placeholder copy** written for this draft — it mirrors the sections and tone of the original site (Beyond Borders, Health, Echoline, Sports) but is not the original site's reporting. Swap it for live content, and add proper source credit for any syndicated/wire pieces, before this goes public on the real domain.
+Content is mirrored from the live theinsidesspeak.com as of this writing:
+
+- **The 12 Echoline pieces** in `articles.ts` are reproduced in full (headings, stat call-outs, prose) with their real hero photos, downloaded into `public/images/articles/`.
+- **Beyond Borders, Health, and most of Sports** were never full articles on the source site — clicking one there just opened the credited stock photo, with no real outbound link. `wire-digests.ts` reproduces them honestly as citation cards (headline, dek, source, date) rather than inventing a detail page or a link that didn't exist.
+- **A cleanup was made**: several articles' reference lists included "citations" that were actually disguised Google search-query links standing in for sources that don't appear to exist (a classic AI-generation artifact). Only links literally pointing at `google.com/search` were stripped; every other link and all prose was left untouched. Worth a look before this goes to production — `git log` / re-run the extraction if you want the raw version.
+- **E-Paper** now points at the two real editions and their real cover art from `/gallery/`.
+
+Re-running the source scrape: theinsidesspeak.com blocks plain `curl`/bot requests on most routes (503s) but not a real headless browser — see the conversation history for the Playwright-based approach, or ask Claude to redo it.

@@ -6,6 +6,7 @@ import {
   estimateReadingMinutes,
   getArticleBySlug,
   getRelatedArticles,
+  type ArticleBodyBlock,
 } from "@/content/articles";
 import { categories } from "@/content/categories";
 import { ArticleCover } from "@/components/article-cover";
@@ -67,28 +68,31 @@ export default async function ArticlePage(props: PageProps<"/articles/[slug]">) 
       </div>
 
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        <ArticleCover
-          slug={article.slug}
-          category={article.category}
-          className="mt-8 aspect-[16/9] w-full rounded-lg"
-        />
+        {article.heroImage ? (
+          <figure className="mt-8">
+            {/* eslint-disable-next-line @next/next/no-img-element -- static export, source image is pre-sized on disk */}
+            <img
+              src={article.heroImage}
+              alt=""
+              className="aspect-[16/9] w-full rounded-lg object-cover"
+            />
+            {article.imageCredit && (
+              <figcaption className="mt-2 text-xs text-ink-soft">
+                {article.imageCredit}
+              </figcaption>
+            )}
+          </figure>
+        ) : (
+          <ArticleCover
+            slug={article.slug}
+            category={article.category}
+            className="mt-8 aspect-[16/9] w-full rounded-lg"
+          />
+        )}
 
         <div className="mx-auto max-w-2xl py-10">
           <div className="space-y-5 text-base leading-relaxed text-ink">
-            {article.body.map((paragraph, i) => (
-              <p key={i}>{paragraph}</p>
-            ))}
-          </div>
-
-          <div className="mt-10 flex flex-wrap gap-2 border-t border-line pt-6">
-            {article.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-line px-3 py-1 text-xs font-medium text-ink-soft"
-              >
-                #{tag}
-              </span>
-            ))}
+            <ArticleBody body={article.body} />
           </div>
 
           <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-line pt-6">
@@ -136,6 +140,50 @@ export default async function ArticlePage(props: PageProps<"/articles/[slug]">) 
         </Link>
       </div>
     </article>
+  );
+}
+
+function ArticleBody({ body }: { body: ArticleBodyBlock[] }) {
+  return (
+    <>
+      {body.map((block, i) => {
+        switch (block.type) {
+          case "h":
+            return (
+              <h2 key={i} className="pt-2 font-heading text-xl font-semibold text-ink">
+                {block.text}
+              </h2>
+            );
+          case "ul":
+            return (
+              <ul key={i} className="list-disc space-y-1.5 pl-5">
+                {block.items.map((item, j) => (
+                  <li key={j}>{item}</li>
+                ))}
+              </ul>
+            );
+          case "ol":
+            return (
+              <ol key={i} className="list-decimal space-y-1.5 pl-5">
+                {block.items.map((item, j) => (
+                  <li key={j}>{item}</li>
+                ))}
+              </ol>
+            );
+          case "callout":
+            return (
+              <div
+                key={i}
+                className="rounded-lg border border-line bg-paper-dim p-4 text-sm leading-relaxed text-ink-soft"
+              >
+                {block.text}
+              </div>
+            );
+          default:
+            return <p key={i}>{block.text}</p>;
+        }
+      })}
+    </>
   );
 }
 

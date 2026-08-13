@@ -15,6 +15,11 @@ export function ArticleCard({
   size?: "default" | "large";
   className?: string;
 }) {
+  const coverClass = cn(
+    "w-full transition-transform duration-500 group-hover:scale-[1.04] object-cover",
+    size === "large" ? "aspect-[16/8]" : "aspect-[16/10]",
+  );
+
   return (
     <article
       className={cn(
@@ -23,14 +28,12 @@ export function ArticleCard({
       )}
     >
       <Link href={`/articles/${article.slug}/`} className="block overflow-hidden">
-        <ArticleCover
-          slug={article.slug}
-          category={article.category}
-          className={cn(
-            "w-full transition-transform duration-500 group-hover:scale-[1.04]",
-            size === "large" ? "aspect-[16/8]" : "aspect-[16/10]",
-          )}
-        />
+        {article.heroImage ? (
+          // eslint-disable-next-line @next/next/no-img-element -- static export, source images are pre-sized on disk
+          <img src={article.heroImage} alt="" className={coverClass} />
+        ) : (
+          <ArticleCover slug={article.slug} category={article.category} className={coverClass} />
+        )}
       </Link>
       <div className="flex flex-1 flex-col gap-3 p-5">
         <CategoryBadge category={article.category} href={sectionHref(article.category)} />
