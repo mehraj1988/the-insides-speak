@@ -5,16 +5,22 @@
 # src/content/articles-data.ts, wire-digests.ts, and editions.ts read at
 # build time. No database, no server for the site itself.
 #
-# ⚠️ SETUP REQUIRED before this works: `base_url` below is a placeholder.
-# See docs/cms-setup.md for the one-time setup (a free GitHub OAuth App
-# + a free Cloudflare Worker) — it only needs to happen once. Once it's
-# done, editors publish articles by following docs/how-to-publish.md.
+# ⚠️ SETUP REQUIRED before this works: the `backend:` block below is a
+# placeholder. See docs/cms-setup.md — sign up at decapbridge.com,
+# register this repo, and DecapBridge gives you an exact backend: block
+# to paste in here, replacing the one below. One-time setup, ~5 minutes.
+# Once it's done, editors publish articles by following
+# docs/how-to-publish.md.
 
 backend:
-  name: github
+  name: git-gateway
   repo: mehraj1988/the-insides-speak
   branch: main
-  base_url: https://REPLACE-WITH-YOUR-WORKER-URL.workers.dev
+  base_url: https://REPLACE-WITH-YOUR-DECAPBRIDGE-URL
+  # ^ Replace this whole `backend:` block with the exact one DecapBridge
+  # generates for this site after you register it — the field names/
+  # values above are a placeholder shape, not guaranteed to match what
+  # DecapBridge actually issues.
 
 # Every save opens a pull request instead of publishing straight to
 # main — a second editor (or the same one, later) can review the diff
